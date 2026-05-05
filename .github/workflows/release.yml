@@ -20,9 +20,10 @@ jobs:
   github:
     needs: draft-release
     permissions:
-      id-token: write
       contents: write
+      id-token: write
       attestations: write
+      artifact-metadata: write
     strategy:
       fail-fast: false
       matrix:
