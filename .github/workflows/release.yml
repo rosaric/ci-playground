@@ -55,13 +55,11 @@ jobs:
         with:
           pattern: ci-playground-*
           merge-multiple: true
+          path: dist
       - run: ls -l
       - uses: actions/attest@v4
         with:
-          subject-path: |
-            ./ci-playground-*
-            ./ci-playground-*.exe
-            ./ci-playground-*.zip
-      - run: gh release create ${{ github.ref_name }} ./ci-playground-* ./ci-playground-*.exe ./ci-playground-*.zip
+          subject-path: dist/*
+      - run: gh release create ${{ github.ref_name }} dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
