@@ -6,26 +6,8 @@ on:
       - "v*.*.*"
 
 jobs:
-  draft-release:
-    permissions:
-      contents: write
-    name: Draft Release
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - run: gh release create ${{ github.ref_name }} --verify-tag --draft --title ${{ github.ref_name }}
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  github:
-    needs: draft-release
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
-      artifact-metadata: write
+  build:
     strategy:
-      fail-fast: false
       matrix:
         include:
           - name: x86_64-linux
@@ -46,16 +28,38 @@ jobs:
           cargo build --target=${{ matrix.target }} --release
           if (Test-Path ./target/${{ matrix.target }}/release/ci-playground.exe) {
             7z a ci-playground-${{ matrix.name }}.zip ./target/${{ matrix.target }}/release/ci-playground.exe
+            Copy-Item ./target/${{ matrix.target }}/release/ci-playground.exe ./target/${{ matrix.target }}/release/ci-playground-${{ matrix.name }}.exe
           }
           elseif (Test-Path ./target/${{ matrix.target }}/release/ci-playground) {
             7z a ci-playground-${{ matrix.name }}.zip ./target/${{ matrix.target }}/release/ci-playground
+            Copy-Item ./target/${{ matrix.target }}/release/ci-playground ./target/${{ matrix.target }}/release/ci-playground-${{ matrix.name }}
           }
-          gh release upload ${{ github.ref_name }} ci-playground-${{ matrix.name }}.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ci-playground-${{ matrix.name }}
+          path: |
+            target/${{ matrix.target }}/release/ci-playground-${{ matrix.name }}
+            target/${{ matrix.target }}/release/ci-playground-${{ matrix.name }}.exe
+            ci-playground-${{ matrix.name }}.zip
+
+  github:
+    needs: build
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v8
+        with:
+          merge-multiple: true
       - uses: actions/attest@v4
         with:
           subject-path: |
-            target/${{ matrix.target }}/release/ci-playground
-            target/${{ matrix.target }}/release/ci-playground.exe
-            ci-playground-${{ matrix.name }}.zip
+            ./ci-playground-*
+            ./ci-playground-*.exe
+            ./ci-playground-*.zip
+      - run: gh release create ${{ github.ref_name }} ./ci-playground-* ./ci-playground-*.exe ./ci-playground-*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
