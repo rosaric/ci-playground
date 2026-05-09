@@ -56,10 +56,10 @@ jobs:
           pattern: ci-playground-*
           merge-multiple: true
           path: dist
-      - run: ls -l
+      - run: ls -l dist
       - uses: actions/attest@v4
         with:
           subject-path: dist/*
-      - run: gh release create ${{ github.ref_name }} dist/*
+      - run: gh release create ${{ github.ref_name }} dist/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
