@@ -28,18 +28,18 @@ jobs:
           cargo build --target=${{ matrix.target }} --release
           if (Test-Path ./target/${{ matrix.target }}/release/ci-playground.exe) {
             7z a ci-playground-${{ matrix.name }}.zip ./target/${{ matrix.target }}/release/ci-playground.exe
-            Copy-Item ./target/${{ matrix.target }}/release/ci-playground.exe ./target/${{ matrix.target }}/release/ci-playground-${{ matrix.name }}.exe
+            Copy-Item ./target/${{ matrix.target }}/release/ci-playground.exe ./ci-playground-${{ matrix.name }}.exe
           }
           elseif (Test-Path ./target/${{ matrix.target }}/release/ci-playground) {
             7z a ci-playground-${{ matrix.name }}.zip ./target/${{ matrix.target }}/release/ci-playground
-            Copy-Item ./target/${{ matrix.target }}/release/ci-playground ./target/${{ matrix.target }}/release/ci-playground-${{ matrix.name }}
+            Copy-Item ./target/${{ matrix.target }}/release/ci-playground ./ci-playground-${{ matrix.name }}
           }
       - uses: actions/upload-artifact@v7
         with:
           name: ci-playground-${{ matrix.name }}
           path: |
-            target/${{ matrix.target }}/release/ci-playground-${{ matrix.name }}
-            target/${{ matrix.target }}/release/ci-playground-${{ matrix.name }}.exe
+            ci-playground-${{ matrix.name }}
+            ci-playground-${{ matrix.name }}.exe
             ci-playground-${{ matrix.name }}.zip
 
   github:
@@ -62,7 +62,6 @@ jobs:
             ./ci-playground-*
             ./ci-playground-*.exe
             ./ci-playground-*.zip
-          subject-name: ${{ github.ref_name }}
       - run: gh release create ${{ github.ref_name }} ./ci-playground-* ./ci-playground-*.exe ./ci-playground-*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
